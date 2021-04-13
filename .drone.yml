@@ -1,0 +1,12 @@
+---
+kind: pipeline
+type: kubernetes
+name: default
+
+steps:
+- name: test
+  image: hashicorp/terraform:0.14.3
+  pull: if-not-exists
+  commands:
+  - cd environment/local/test
+  - terraform init

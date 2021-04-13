@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "drone-vault.fullname" . }}
+  labels:
+    {{- include "drone-vault.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "drone-vault.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "drone-vault.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "drone-vault.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          env:
+          - name: DRONE_SECRET
+            value: "{{ .Values.env.DRONE_SECRET }}"
+          - name: VAULT_ADDR
+            value: "{{ .Values.env.VAULT_ADDR }}"
+          - name: VAULT_AUTH_TYPE
+            value: "{{ .Values.env.VAULT_AUTH_TYPE }}"
+          - name: VAULT_TOKEN_TTL
+            value: "{{ .Values.env.VAULT_TOKEN_TTL }}"
+          - name: VAULT_TOKEN_RENEWAL
+            value: "{{ .Values.env.VAULT_TOKEN_RENEWAL }}"
+          - name: VAULT_APPROLE_ID
+            value: "{{ .Values.env.VAULT_APPROLE_ID }}"
+          - name: VAULT_APPROLE_SECRET
+            value: "{{ .Values.env.VAULT_APPROLE_SECRET }}"
+          - name: DRONE_DEBUG
+            value: "{{ .Values.env.DRONE_DEBUG }}"
+          - name: DRONE_LOGS_TRACE
+            value: "{{ .Values.env.DRONE_LOGS_TRACE }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.env.PORT }}
+              protocol: TCP
+          livenessProbe:
+            exec:
+              command:
+              - ls
+            initialDelaySeconds: 5
+          readinessProbe:
+            exec:
+              command:
+              - ls
+            initialDelaySeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

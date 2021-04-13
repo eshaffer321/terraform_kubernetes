@@ -1,0 +1,7 @@
+global:
+  tlsDisable: true
+
+injector:
+  enabled: true
+  metrics:
+    enabled: false

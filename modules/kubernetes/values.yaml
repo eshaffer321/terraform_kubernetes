@@ -1,0 +1,8 @@
+controller:
+  service:
+    type: "NodePort"
+    externalTrafficPolicy: "Cluster"
+    httpPort:
+      nodePort: "30080"
+    httpsPort:
+      nodePort: "30081"
